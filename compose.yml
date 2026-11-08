@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:17-alpine
-    container_name: saas-driving-school-db
+    container_name: restaurant-reserve-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USERNAME}

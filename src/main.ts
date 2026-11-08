@@ -28,7 +28,7 @@ async function bootstrap() {
 
   // 4. Swagger
   const config = new DocumentBuilder()
-    .setTitle('Saas Driving School API')
+    .setTitle('Saas Restaurant Reserve API')
     .setDescription(
       'Documentar a minha API para o meu SaaS de escola de condução',
     )
