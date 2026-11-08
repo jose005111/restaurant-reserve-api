@@ -11,6 +11,11 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRE_IN: z.string().default('1d'),
 
+  // === Seed do SUPER_ADMIN ===
+  SUPER_ADMIN_NAME: z.string().optional(),
+  SUPER_ADMIN_EMAIL: z.string().email().optional(),
+  SUPER_ADMIN_PASSWORD: z.string().min(8).optional(),
+
   // === Validação das variáveis do Banco  ===
   DB_HOST: z.string(),
   DB_PORT: z.coerce.number().default(5432),
