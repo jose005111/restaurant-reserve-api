@@ -1,0 +1,23 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { storageConfig } from '../../config';
+import { RestaurantsModule } from '../restaurants/restaurants.module';
+import { Restaurant } from '../restaurants/entities/restaurant.entity';
+import { StorageModule } from '../storage/storage.module';
+import { BrandingController } from './branding.controller';
+import { BrandingService } from './branding.service';
+import { RestaurantBranding } from './entities/restaurant-branding.entity';
+import { PublicBrandingController } from './public-branding.controller';
+
+@Module({
+  imports: [
+    ConfigModule.forFeature(storageConfig),
+    TypeOrmModule.forFeature([RestaurantBranding, Restaurant]),
+    RestaurantsModule,
+    StorageModule,
+  ],
+  controllers: [BrandingController, PublicBrandingController],
+  providers: [BrandingService],
+})
+export class BrandingModule {}

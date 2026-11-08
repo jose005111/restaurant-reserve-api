@@ -1,13 +1,18 @@
 import { QueryFailedError } from 'typeorm';
 
-export function isUniqueViolation(error: unknown): boolean {
+function driverCode(error: unknown): string | undefined {
   if (!(error instanceof QueryFailedError)) {
-    return false;
+    return undefined;
   }
 
-  const driverError = (
-    error as QueryFailedError & { driverError?: { code?: string } }
-  ).driverError;
+  return (error as QueryFailedError & { driverError?: { code?: string } })
+    .driverError?.code;
+}
 
-  return driverError?.code === '23505';
+export function isUniqueViolation(error: unknown): boolean {
+  return driverCode(error) === '23505';
+}
+
+export function isForeignKeyViolation(error: unknown): boolean {
+  return driverCode(error) === '23503';
 }

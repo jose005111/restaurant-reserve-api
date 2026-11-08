@@ -15,10 +15,32 @@ import { generateSlug } from '../../common/utils/slug.util';
 import { generateToken } from '../../common/utils/token.util';
 import { User } from '../users/entities/user.entity';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { PublicSignupDto } from './dto/public-signup.dto';
 import { RestaurantResponseDto } from './dto/restaurant-response.dto';
 import { UpdateRestaurantStatusDto } from './dto/update-restaurant-status.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
+
+interface RestaurantSignupInput {
+  name: string;
+  slug?: string;
+  phone?: string;
+  address?: string;
+  currency?: string;
+  admin: {
+    name: string;
+    email: string;
+    password: string;
+  };
+}
+
+interface RestaurantLimits {
+  plan: RestaurantPlan;
+  subscriptionExpiresAt: Date | null;
+  maxTables: number;
+  maxMenuItems: number;
+  maxUsers: number;
+}
 
 @Injectable()
 export class RestaurantsService {
@@ -29,6 +51,31 @@ export class RestaurantsService {
   ) {}
 
   async create(dto: CreateRestaurantDto): Promise<RestaurantResponseDto> {
+    return this.createInternal(dto, {
+      plan: dto.plan ?? RestaurantPlan.FREE,
+      subscriptionExpiresAt: dto.subscriptionExpiresAt
+        ? new Date(dto.subscriptionExpiresAt)
+        : null,
+      maxTables: dto.maxTables ?? 10,
+      maxMenuItems: dto.maxMenuItems ?? 50,
+      maxUsers: dto.maxUsers ?? 5,
+    });
+  }
+
+  async signup(dto: PublicSignupDto): Promise<RestaurantResponseDto> {
+    return this.createInternal(dto, {
+      plan: RestaurantPlan.FREE,
+      subscriptionExpiresAt: null,
+      maxTables: 10,
+      maxMenuItems: 50,
+      maxUsers: 5,
+    });
+  }
+
+  private async createInternal(
+    dto: RestaurantSignupInput,
+    limits: RestaurantLimits,
+  ): Promise<RestaurantResponseDto> {
     const slug = dto.slug ?? generateSlug(dto.name);
 
     if (!slug) {
@@ -67,13 +114,11 @@ export class RestaurantsService {
           currency: dto.currency ?? 'AOA',
           publicToken: generateToken(),
           status: RestaurantStatus.ACTIVE,
-          plan: dto.plan ?? RestaurantPlan.FREE,
-          subscriptionExpiresAt: dto.subscriptionExpiresAt
-            ? new Date(dto.subscriptionExpiresAt)
-            : null,
-          maxTables: dto.maxTables ?? 10,
-          maxMenuItems: dto.maxMenuItems ?? 50,
-          maxUsers: dto.maxUsers ?? 5,
+          plan: limits.plan,
+          subscriptionExpiresAt: limits.subscriptionExpiresAt,
+          maxTables: limits.maxTables,
+          maxMenuItems: limits.maxMenuItems,
+          maxUsers: limits.maxUsers,
         });
 
         const saved = await manager.save(entity);

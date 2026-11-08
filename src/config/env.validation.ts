@@ -10,6 +10,13 @@ const envSchema = z.object({
   API_KEY: z.string().min(16),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRE_IN: z.string().default('1d'),
+  PUBLIC_MENU_BASE_URL: z.string().url().default('http://localhost:5173'),
+
+  // === Auto-registo de restaurantes ===
+  ALLOW_PUBLIC_SIGNUP: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 
   // === Seed do SUPER_ADMIN ===
   SUPER_ADMIN_NAME: z.string().optional(),
@@ -24,13 +31,11 @@ const envSchema = z.object({
   DB_NAME: z.string(),
   DB_SSL: z.coerce.boolean().default(true).optional(),
 
-  // Variáveis de Armazenamento
-
-  // STORAGE_ENPOINT: z.string().url(),
-  // STORAGE_BUCKET: z.string(),
-  // STORAGE_ACCESS_KEY: z.string(),
-  // STORAGE_SECRET_KEY: z.string(),
-  // STORAGE_PUBLIC_URL: z.string().url(),
+  // === Armazenamento ===
+  STORAGE_DRIVER: z.enum(['local']).default('local'),
+  STORAGE_LOCAL_PATH: z.string().default('uploads'),
+  STORAGE_PUBLIC_BASE_URL: z.string().url().optional(),
+  MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(2097152),
 });
 
 export type Env = z.infer<typeof envSchema>;
