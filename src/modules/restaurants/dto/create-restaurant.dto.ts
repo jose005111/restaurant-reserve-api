@@ -1,3 +1,9 @@
+import { OptionalField } from '../../../common/decorators/optional-field.decorator';
+import {
+  emptyToNull,
+  emptyToUndefined,
+  trimString,
+} from '../../../common/utils/input.util';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -18,6 +24,7 @@ import { RestaurantPlan } from '../../../common/enums/restaurant-plan.enum';
 
 export class CreateRestaurantAdminDto {
   @ApiProperty()
+  @Transform(({ value }: { value: unknown }) => trimString(value))
   @IsString()
   @MinLength(1)
   @MaxLength(120)
@@ -31,7 +38,7 @@ export class CreateRestaurantAdminDto {
   @MaxLength(255)
   email: string;
 
-  @ApiProperty({ minLength: 8 })
+  @ApiProperty({ minLength: 8, maxLength: 72, writeOnly: true })
   @IsString()
   @MinLength(8)
   @MaxLength(72)
@@ -40,13 +47,15 @@ export class CreateRestaurantAdminDto {
 
 export class CreateRestaurantDto {
   @ApiProperty()
+  @Transform(({ value }: { value: unknown }) => trimString(value))
   @IsString()
   @MinLength(1)
   @MaxLength(150)
   name: string;
 
   @ApiProperty({ required: false })
-  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => emptyToUndefined(value))
+  @OptionalField()
   @IsString()
   @MaxLength(80)
   @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
@@ -54,51 +63,63 @@ export class CreateRestaurantDto {
   })
   slug?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  phone?: string;
+  phone?: string | null;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  address?: string;
+  address?: string | null;
 
   @ApiProperty({ required: false, default: 'AOA' })
-  @IsOptional()
+  @OptionalField()
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string' ? value.trim().toUpperCase() || undefined : value,
   )
   @IsString()
   @Matches(/^[A-Z]{3}$/, { message: 'A moeda deve ter 3 letras' })
   currency?: string;
 
-  @ApiProperty({ required: false, enum: RestaurantPlan })
-  @IsOptional()
+  @ApiProperty({
+    required: false,
+    default: RestaurantPlan.FREE,
+    enum: RestaurantPlan,
+  })
+  @OptionalField()
   @IsEnum(RestaurantPlan)
   plan?: RestaurantPlan;
 
-  @ApiProperty({ required: false, nullable: true })
+  @ApiProperty({
+    required: false,
+    type: String,
+    format: 'date-time',
+    nullable: true,
+  })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsDateString()
   subscriptionExpiresAt?: string | null;
 
-  @ApiProperty({ required: false, minimum: 1 })
-  @IsOptional()
+  @ApiProperty({ required: false, default: 10, minimum: 1 })
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxTables?: number;
 
-  @ApiProperty({ required: false, minimum: 1 })
-  @IsOptional()
+  @ApiProperty({ required: false, default: 50, minimum: 1 })
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxMenuItems?: number;
 
-  @ApiProperty({ required: false, minimum: 1 })
-  @IsOptional()
+  @ApiProperty({ required: false, default: 5, minimum: 1 })
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxUsers?: number;

@@ -20,6 +20,10 @@ export class RestaurantAvailabilityService {
       throw new ForbiddenException('Restaurante indisponível');
     }
 
+    return this.assertEntityAvailable(restaurant);
+  }
+
+  assertEntityAvailable(restaurant: Restaurant): Restaurant {
     const subscriptionExpired =
       restaurant.subscriptionExpiresAt !== null &&
       restaurant.subscriptionExpiresAt.getTime() <= Date.now();

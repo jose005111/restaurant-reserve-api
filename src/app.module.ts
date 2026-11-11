@@ -1,3 +1,7 @@
+import { OrdersModule } from './modules/orders/orders.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { MenuModule } from './modules/menu/menu.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import {
@@ -14,6 +18,7 @@ import { RestaurantsModule } from './modules/restaurants/restaurants.module';
 import { TablesModule } from './modules/tables/tables.module';
 import { LinksModule } from './modules/links/links.module';
 import { BrandingModule } from './modules/branding/branding.module';
+import { SecurityModule } from './common/security.module';
 
 @Module({
   imports: [
@@ -24,6 +29,7 @@ import { BrandingModule } from './modules/branding/branding.module';
       validate: validateEnv,
       cache: true,
     }),
+    SecurityModule,
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
       useFactory: (db: ConfigType<typeof databaseConfig>) => ({
@@ -38,6 +44,10 @@ import { BrandingModule } from './modules/branding/branding.module';
     TablesModule,
     LinksModule,
     BrandingModule,
+    CategoriesModule,
+    MenuModule,
+    OrdersModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],

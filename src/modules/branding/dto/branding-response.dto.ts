@@ -17,31 +17,31 @@ export class BrandingResponseDto {
   @ApiProperty({ type: String, nullable: true })
   loginImageUrl: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#111827', pattern: '^#[0-9A-Fa-f]{6}$' })
   primaryColor: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#6B7280', pattern: '^#[0-9A-Fa-f]{6}$' })
   secondaryColor: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#F59E0B', pattern: '^#[0-9A-Fa-f]{6}$' })
   accentColor: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#FFFFFF', pattern: '^#[0-9A-Fa-f]{6}$' })
   backgroundColor: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#F9FAFB', pattern: '^#[0-9A-Fa-f]{6}$' })
   surfaceColor: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '#111827', pattern: '^#[0-9A-Fa-f]{6}$' })
   textColor: string;
 
-  @ApiProperty({ enum: ThemeMode })
+  @ApiProperty({ enum: ThemeMode, default: ThemeMode.LIGHT })
   themeMode: ThemeMode;
 
   @ApiProperty({ type: String, nullable: true })
   fontFamily: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ default: 12, minimum: 0, maximum: 32 })
   borderRadius: number;
 
   @ApiProperty({ type: String, nullable: true })

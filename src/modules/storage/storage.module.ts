@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { storageConfig } from '../../config';
 import { LocalStorageService } from './local-storage.service';
 import { STORAGE_SERVICE } from './storage.interface';
 
 @Module({
+  imports: [ConfigModule.forFeature(storageConfig)],
   providers: [
     {
       provide: STORAGE_SERVICE,

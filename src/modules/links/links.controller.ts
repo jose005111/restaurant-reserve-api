@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import { Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -7,6 +8,7 @@ import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { GenericLinkResponseDto } from './dto/generic-link-response.dto';
 import { LinksService } from './links.service';
 
+@ApiErrors(400, 401, 403, 404, 409, 429, 500)
 @ApiTags('links')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)

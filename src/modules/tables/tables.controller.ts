@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import {
   Body,
   Controller,
@@ -13,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNoContentResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -25,6 +27,7 @@ import { TableQrResponseDto } from './dto/table-qr-response.dto';
 import { UpdateDiningTableDto } from './dto/update-dining-table.dto';
 import { TablesService } from './tables.service';
 
+@ApiErrors(400, 401, 403, 404, 409, 429, 500)
 @ApiTags('tables')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)
@@ -59,6 +62,7 @@ export class TablesController {
   }
 
   @Post(':id/qr/rotate')
+  @HttpCode(200)
   @ApiOkResponse({ type: DiningTableResponseDto })
   rotateToken(
     @CurrentUser() currentUser: AuthUser,
@@ -88,6 +92,7 @@ export class TablesController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiNoContentResponse()
   async remove(
     @CurrentUser() currentUser: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,

@@ -1,16 +1,11 @@
+import { OptionalField } from '../../../common/decorators/optional-field.decorator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class UpdateDiningTableDto {
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
@@ -20,7 +15,7 @@ export class UpdateDiningTableDto {
   label?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @IsBoolean()
   isActive?: boolean;
 }

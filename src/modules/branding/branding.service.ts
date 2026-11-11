@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryDeepPartialEntity, Repository } from 'typeorm';
 import { BrandingAsset } from '../../common/enums/branding-asset.enum';
@@ -22,6 +23,7 @@ import type { StorageService } from '../storage/storage.interface';
 import { BrandingResponseDto } from './dto/branding-response.dto';
 import { UpdateBrandingDto } from './dto/update-branding.dto';
 import { RestaurantBranding } from './entities/restaurant-branding.entity';
+import { isUniqueViolation } from '../../common/utils/database-error.util';
 
 const ASSET_COLUMNS = {
   [BrandingAsset.LOGO]: 'logoUrl',
@@ -110,7 +112,7 @@ export class BrandingService {
     }
 
     const column = ASSET_COLUMNS[asset];
-    const key = `restaurants/${restaurantId}/branding/${asset}-${Date.now()}.webp`;
+    const key = `restaurants/${restaurantId}/branding/${asset}-${randomUUID()}.webp`;
     const stored = await this.storage.save(key, converted, 'image/webp');
     const previousUrl = branding[column];
 
@@ -162,7 +164,16 @@ export class BrandingService {
       return branding;
     }
 
-    return this.brandings.save(this.brandings.create({ restaurantId }));
+    try {
+      return await this.brandings.save(this.brandings.create({ restaurantId }));
+    } catch (error) {
+      if (!isUniqueViolation(error)) {
+        throw error;
+      }
+
+      // Another request may have recreated the same 1:1 row concurrently.
+      return this.brandings.findOneOrFail({ where: { restaurantId } });
+    }
   }
 
   private validateImage(file: Express.Multer.File): void {

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
+import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { storageConfig } from '../../config';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
@@ -13,11 +15,19 @@ import { PublicBrandingController } from './public-branding.controller';
 @Module({
   imports: [
     ConfigModule.forFeature(storageConfig),
+    MulterModule.registerAsync({
+      imports: [ConfigModule.forFeature(storageConfig)],
+      inject: [storageConfig.KEY],
+      useFactory: (config: ConfigType<typeof storageConfig>) => ({
+        limits: { fileSize: config.maxUploadBytes, files: 1 },
+      }),
+    }),
     TypeOrmModule.forFeature([RestaurantBranding, Restaurant]),
     RestaurantsModule,
     StorageModule,
   ],
   controllers: [BrandingController, PublicBrandingController],
   providers: [BrandingService],
+  exports: [BrandingService],
 })
 export class BrandingModule {}

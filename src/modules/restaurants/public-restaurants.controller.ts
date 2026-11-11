@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import {
   Body,
   Controller,
@@ -13,7 +14,9 @@ import { appConfig } from '../../config';
 import { PublicSignupDto } from './dto/public-signup.dto';
 import { RestaurantResponseDto } from './dto/restaurant-response.dto';
 import { RestaurantsService } from './restaurants.service';
+import { Throttle } from '@nestjs/throttler';
 
+@ApiErrors(400, 403, 404, 409, 429, 500)
 @ApiTags('public')
 @Public()
 @Controller('public/signup')
@@ -25,6 +28,7 @@ export class PublicRestaurantsController {
   ) {}
 
   @Post()
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @HttpCode(201)
   @ApiCreatedResponse({ type: RestaurantResponseDto })
   signup(@Body() dto: PublicSignupDto): Promise<RestaurantResponseDto> {

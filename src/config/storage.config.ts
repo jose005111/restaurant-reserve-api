@@ -9,6 +9,7 @@ export default registerAs('storage', () => {
     publicBaseUrl: (
       process.env.STORAGE_PUBLIC_BASE_URL ?? `http://localhost:${port}/uploads`
     ).replace(/\/+$/, ''),
+    maxMenuItemImages: Number(process.env.MAX_MENU_ITEM_IMAGES ?? 5),
     maxUploadBytes: Number(process.env.MAX_UPLOAD_BYTES ?? 2 * 1024 * 1024),
   };
 });

@@ -1,3 +1,9 @@
+import { OptionalField } from '../../../common/decorators/optional-field.decorator';
+import {
+  emptyToNull,
+  emptyToUndefined,
+  trimString,
+} from '../../../common/utils/input.util';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -13,13 +19,15 @@ import { CreateRestaurantAdminDto } from './create-restaurant.dto';
 
 export class PublicSignupDto {
   @ApiProperty()
+  @Transform(({ value }: { value: unknown }) => trimString(value))
   @IsString()
   @MinLength(1)
   @MaxLength(150)
   name: string;
 
   @ApiProperty({ required: false })
-  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => emptyToUndefined(value))
+  @OptionalField()
   @IsString()
   @MaxLength(80)
   @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
@@ -27,22 +35,24 @@ export class PublicSignupDto {
   })
   slug?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  phone?: string;
+  phone?: string | null;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  address?: string;
+  address?: string | null;
 
   @ApiProperty({ required: false, default: 'AOA' })
-  @IsOptional()
+  @OptionalField()
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string' ? value.trim().toUpperCase() || undefined : value,
   )
   @IsString()
   @Matches(/^[A-Z]{3}$/, { message: 'A moeda deve ter 3 letras' })

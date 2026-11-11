@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import {
   Body,
   Controller,
@@ -17,6 +18,8 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOkResponse,
+  ApiNoContentResponse,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -28,6 +31,7 @@ import { BrandingService } from './branding.service';
 import { BrandingResponseDto } from './dto/branding-response.dto';
 import { UpdateBrandingDto } from './dto/update-branding.dto';
 
+@ApiErrors(400, 401, 403, 404, 409, 429, 500, 413)
 @ApiTags('branding')
 @ApiBearerAuth()
 @Controller('branding')
@@ -52,12 +56,14 @@ export class BrandingController {
   }
 
   @Put(':asset')
+  @ApiParam({ name: 'asset', enum: BrandingAsset })
   @Roles(UserRole.ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['file'],
       properties: {
         file: { type: 'string', format: 'binary' },
       },
@@ -74,6 +80,8 @@ export class BrandingController {
   }
 
   @Delete(':asset')
+  @ApiParam({ name: 'asset', enum: BrandingAsset })
+  @ApiNoContentResponse()
   @Roles(UserRole.ADMIN)
   @HttpCode(204)
   async remove(
