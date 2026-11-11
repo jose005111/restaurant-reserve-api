@@ -44,6 +44,18 @@ npm run start:dev
 
 O seed cria/actualiza apenas o SUPER_ADMIN. Não contém dados de demonstração de restaurantes. `synchronize` está desactivado: alterações à BD fazem-se sempre por migrations.
 
+## Deploy no Render
+
+Cria um **Web Service** com o directório raiz `restaurant-reserve-api` (se estiveres a usar o repositório do projecto completo):
+
+- **Build Command:** `npm ci --include=dev && npm run build`
+- **Start Command:** `npm start` (equivalente a `npm run start:prod`)
+- **Health Check Path:** `/api/health`
+
+Configura `NODE_ENV=production`, `JWT_SECRET`, `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` e as restantes variáveis da tabela acima conforme o ambiente. O Render define `PORT`; a aplicação já usa esse valor. Aplica as migrations separadamente antes de servir tráfego. O arranque de produção executa `dist/main.js` e pressupõe que o build terminou com sucesso.
+
+O endpoint de saúde consulta o PostgreSQL. Se a base de dados não estiver acessível, a aplicação pode demorar a iniciar devido às tentativas de ligação do TypeORM, e o health check falha até a ligação estar disponível.
+
 ## Rotas e contrato
 
 Todas as rotas têm prefixo `/api`:
