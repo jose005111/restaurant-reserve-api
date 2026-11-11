@@ -1,3 +1,4 @@
+import { OptionalField } from '../../../common/decorators/optional-field.decorator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
@@ -5,7 +6,6 @@ import {
   IsEmail,
   IsIn,
   IsNotEmpty,
-  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -15,14 +15,14 @@ import { STAFF_ROLES } from './create-user.dto';
 
 export class UpdateUserDto {
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
   name?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
@@ -31,19 +31,19 @@ export class UpdateUserDto {
   email?: string;
 
   @ApiPropertyOptional({ minLength: 8 })
-  @IsOptional()
+  @OptionalField()
   @IsString()
   @MinLength(8)
   @MaxLength(72)
   password?: string;
 
   @ApiPropertyOptional({ enum: STAFF_ROLES })
-  @IsOptional()
+  @OptionalField()
   @IsIn(STAFF_ROLES)
   role?: UserRole;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @IsBoolean()
   isActive?: boolean;
 }

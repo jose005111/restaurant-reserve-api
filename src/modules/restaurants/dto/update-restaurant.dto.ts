@@ -1,3 +1,5 @@
+import { OptionalField } from '../../../common/decorators/optional-field.decorator';
+import { emptyToNull, trimString } from '../../../common/utils/input.util';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
@@ -15,14 +17,16 @@ import { RestaurantPlan } from '../../../common/enums/restaurant-plan.enum';
 
 export class UpdateRestaurantDto {
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
+  @Transform(({ value }: { value: unknown }) => trimString(value))
   @IsString()
   @MinLength(1)
   @MaxLength(150)
   name?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => trimString(value))
+  @OptionalField()
   @IsString()
   @MaxLength(80)
   @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
@@ -30,51 +34,54 @@ export class UpdateRestaurantDto {
   })
   slug?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(30)
-  phone?: string;
+  phone?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String, nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  address?: string;
+  address?: string | null;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @OptionalField()
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string' ? value.trim().toUpperCase() || undefined : value,
   )
   @IsString()
   @Matches(/^[A-Z]{3}$/, { message: 'A moeda deve ter 3 letras' })
   currency?: string;
 
   @ApiPropertyOptional({ enum: RestaurantPlan })
-  @IsOptional()
+  @OptionalField()
   @IsEnum(RestaurantPlan)
   plan?: RestaurantPlan;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  @Transform(({ value }: { value: unknown }) => emptyToNull(value))
   @IsOptional()
   @IsDateString()
   subscriptionExpiresAt?: string | null;
 
   @ApiPropertyOptional({ minimum: 1 })
-  @IsOptional()
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxTables?: number;
 
   @ApiPropertyOptional({ minimum: 1 })
-  @IsOptional()
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxMenuItems?: number;
 
   @ApiPropertyOptional({ minimum: 1 })
-  @IsOptional()
+  @OptionalField()
   @IsInt()
   @Min(1)
   maxUsers?: number;

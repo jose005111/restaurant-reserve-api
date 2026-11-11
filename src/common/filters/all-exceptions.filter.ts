@@ -39,6 +39,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
+    const messages: Record<string, string> = {
+      Unauthorized: 'Não autorizado',
+      'Forbidden resource': 'Acesso negado',
+      'File too large': 'Ficheiro demasiado grande',
+      'Too many files': 'Foi enviado mais de um ficheiro',
+      'Unexpected field': 'Campo de ficheiro inesperado',
+    };
+    if (typeof message === 'string') {
+      message = messages[message] ?? message;
+    }
+
     response.status(status).json({
       statusCode: status,
       message,

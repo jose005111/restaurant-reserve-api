@@ -6,13 +6,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryDeepPartialEntity, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindOptionsWhere,
+  QueryDeepPartialEntity,
+  Repository,
+} from 'typeorm';
 import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { isUniqueViolation } from '../../common/utils/database-error.util';
 import { hashPassword } from '../../common/utils/password.util';
 import { Restaurant } from '../restaurants/entities/restaurant.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
@@ -25,21 +31,28 @@ export class UsersService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(currentUser: AuthUser): Promise<UserResponseDto[]> {
-    if (currentUser.role === UserRole.SUPER_ADMIN) {
-      const users = await this.users.find({
-        order: { createdAt: 'ASC' },
-      });
-
-      return users.map((user) => this.toResponse(user));
+  async findAll(
+    currentUser: AuthUser,
+    query: ListUsersQueryDto = {},
+  ): Promise<UserResponseDto[]> {
+    const where: FindOptionsWhere<User> = {};
+    if (currentUser.role !== UserRole.SUPER_ADMIN) {
+      if (!currentUser.restaurantId) return [];
+      if (
+        query.restaurantId &&
+        query.restaurantId !== currentUser.restaurantId
+      ) {
+        throw new ForbiddenException('Acesso negado');
+      }
+      where.restaurantId = currentUser.restaurantId;
+    } else if (query.restaurantId) {
+      where.restaurantId = query.restaurantId;
     }
-
-    if (!currentUser.restaurantId) {
-      return [];
-    }
-
+    if (query.role) where.role = query.role;
+    if (query.isActive !== undefined)
+      where.isActive = query.isActive === 'true';
     const users = await this.users.find({
-      where: { restaurantId: currentUser.restaurantId },
+      where,
       order: { createdAt: 'ASC' },
     });
 
@@ -121,9 +134,19 @@ export class UsersService {
   ): Promise<UserResponseDto> {
     const user = await this.getUserOrFail(currentUser, id);
 
-    if (user.role === UserRole.SUPER_ADMIN) {
+    if (user.role === UserRole.SUPER_ADMIN && dto.role !== undefined) {
       throw new ForbiddenException(
-        'Não é possível alterar um utilizador SUPER_ADMIN',
+        'Não é possível alterar a função de um SUPER_ADMIN',
+      );
+    }
+
+    if (
+      user.id === currentUser.id &&
+      (dto.isActive === false ||
+        (dto.role !== undefined && dto.role !== user.role))
+    ) {
+      throw new ConflictException(
+        'Não é possível desactivar ou alterar a própria função',
       );
     }
 

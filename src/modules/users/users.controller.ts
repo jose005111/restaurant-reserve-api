@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import {
   Body,
   Controller,
@@ -8,11 +9,13 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNoContentResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -20,10 +23,12 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
+@ApiErrors(400, 401, 403, 404, 409, 429, 500)
 @ApiTags('users')
 @ApiBearerAuth()
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
@@ -42,8 +47,11 @@ export class UsersController {
 
   @Get()
   @ApiOkResponse({ type: UserResponseDto, isArray: true })
-  findAll(@CurrentUser() currentUser: AuthUser): Promise<UserResponseDto[]> {
-    return this.usersService.findAll(currentUser);
+  findAll(
+    @CurrentUser() currentUser: AuthUser,
+    @Query() query: ListUsersQueryDto,
+  ): Promise<UserResponseDto[]> {
+    return this.usersService.findAll(currentUser, query);
   }
 
   @Get(':id')
@@ -67,6 +75,7 @@ export class UsersController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiNoContentResponse()
   async remove(
     @CurrentUser() currentUser: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,

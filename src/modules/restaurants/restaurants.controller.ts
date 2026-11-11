@@ -1,3 +1,4 @@
+import { ApiErrors } from '../../common/decorators/api-errors.decorator';
 import {
   Body,
   Controller,
@@ -13,16 +14,19 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNoContentResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { RestaurantActivityResponseDto } from './dto/restaurant-activity-response.dto';
 import { RestaurantResponseDto } from './dto/restaurant-response.dto';
 import { UpdateRestaurantStatusDto } from './dto/update-restaurant-status.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { RestaurantsService } from './restaurants.service';
 
+@ApiErrors(400, 401, 403, 404, 409, 429, 500)
 @ApiTags('restaurants')
 @ApiBearerAuth()
 @Roles(UserRole.SUPER_ADMIN)
@@ -50,6 +54,14 @@ export class RestaurantsController {
     return this.restaurantsService.findOne(id);
   }
 
+  @Get(':id/activity')
+  @ApiOkResponse({ type: RestaurantActivityResponseDto })
+  activity(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<RestaurantActivityResponseDto> {
+    return this.restaurantsService.activity(id);
+  }
+
   @Patch(':id')
   @ApiOkResponse({ type: RestaurantResponseDto })
   update(
@@ -70,6 +82,7 @@ export class RestaurantsController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiNoContentResponse()
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.restaurantsService.remove(id);
   }

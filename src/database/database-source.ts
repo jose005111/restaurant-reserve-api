@@ -6,8 +6,8 @@ import { DataSource } from 'typeorm';
 import { join } from 'path';
 
 export default new DataSource({
-  ...(databaseConfig() as object),
+  ...databaseConfig(),
   entities: [join(__dirname, '..', '**', '*.entity.{ts,js}')],
   migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
   migrationsTableName: 'migrations',
-} as any);
+});

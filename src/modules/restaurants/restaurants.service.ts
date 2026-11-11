@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, QueryDeepPartialEntity, Repository } from 'typeorm';
 import { RestaurantPlan } from '../../common/enums/restaurant-plan.enum';
+import { OrderStatus } from '../../common/enums/order-status.enum';
 import { RestaurantStatus } from '../../common/enums/restaurant-status.enum';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { isUniqueViolation } from '../../common/utils/database-error.util';
@@ -14,11 +15,37 @@ import { hashPassword } from '../../common/utils/password.util';
 import { generateSlug } from '../../common/utils/slug.util';
 import { generateToken } from '../../common/utils/token.util';
 import { User } from '../users/entities/user.entity';
+import { DiningTable } from '../tables/entities/dining-table.entity';
+import { MenuItem } from '../menu/entities/menu-item.entity';
+import { Order } from '../orders/entities/order.entity';
+import { RestaurantActivityResponseDto } from './dto/restaurant-activity-response.dto';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { PublicSignupDto } from './dto/public-signup.dto';
 import { RestaurantResponseDto } from './dto/restaurant-response.dto';
 import { UpdateRestaurantStatusDto } from './dto/update-restaurant-status.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
+
+interface RestaurantSignupInput {
+  name: string;
+  slug?: string;
+  phone?: string | null;
+  address?: string | null;
+  currency?: string;
+  admin: {
+    name: string;
+    email: string;
+    password: string;
+  };
+}
+
+interface RestaurantLimits {
+  plan: RestaurantPlan;
+  subscriptionExpiresAt: Date | null;
+  maxTables: number;
+  maxMenuItems: number;
+  maxUsers: number;
+}
 
 @Injectable()
 export class RestaurantsService {
@@ -29,6 +56,31 @@ export class RestaurantsService {
   ) {}
 
   async create(dto: CreateRestaurantDto): Promise<RestaurantResponseDto> {
+    return this.createInternal(dto, {
+      plan: dto.plan ?? RestaurantPlan.FREE,
+      subscriptionExpiresAt: dto.subscriptionExpiresAt
+        ? new Date(dto.subscriptionExpiresAt)
+        : null,
+      maxTables: dto.maxTables ?? 10,
+      maxMenuItems: dto.maxMenuItems ?? 50,
+      maxUsers: dto.maxUsers ?? 5,
+    });
+  }
+
+  async signup(dto: PublicSignupDto): Promise<RestaurantResponseDto> {
+    return this.createInternal(dto, {
+      plan: RestaurantPlan.FREE,
+      subscriptionExpiresAt: null,
+      maxTables: 10,
+      maxMenuItems: 50,
+      maxUsers: 5,
+    });
+  }
+
+  private async createInternal(
+    dto: RestaurantSignupInput,
+    limits: RestaurantLimits,
+  ): Promise<RestaurantResponseDto> {
     const slug = dto.slug ?? generateSlug(dto.name);
 
     if (!slug) {
@@ -67,13 +119,11 @@ export class RestaurantsService {
           currency: dto.currency ?? 'AOA',
           publicToken: generateToken(),
           status: RestaurantStatus.ACTIVE,
-          plan: dto.plan ?? RestaurantPlan.FREE,
-          subscriptionExpiresAt: dto.subscriptionExpiresAt
-            ? new Date(dto.subscriptionExpiresAt)
-            : null,
-          maxTables: dto.maxTables ?? 10,
-          maxMenuItems: dto.maxMenuItems ?? 50,
-          maxUsers: dto.maxUsers ?? 5,
+          plan: limits.plan,
+          subscriptionExpiresAt: limits.subscriptionExpiresAt,
+          maxTables: limits.maxTables,
+          maxMenuItems: limits.maxMenuItems,
+          maxUsers: limits.maxUsers,
         });
 
         const saved = await manager.save(entity);
@@ -115,6 +165,60 @@ export class RestaurantsService {
   async findOne(id: string): Promise<RestaurantResponseDto> {
     const restaurant = await this.getRestaurantOrFail(id);
     return this.toResponse(restaurant);
+  }
+
+  async activity(id: string): Promise<RestaurantActivityResponseDto> {
+    await this.getRestaurantOrFail(id);
+    const since = new Date(Date.now() - 30 * 86_400_000);
+    const [tablesCount, menuItemsCount, activeUsersCount, orders] =
+      await Promise.all([
+        this.dataSource
+          .getRepository(DiningTable)
+          .count({ where: { restaurantId: id } }),
+        this.dataSource
+          .getRepository(MenuItem)
+          .count({ where: { restaurantId: id } }),
+        this.dataSource
+          .getRepository(User)
+          .count({ where: { restaurantId: id, isActive: true } }),
+        this.dataSource
+          .getRepository(Order)
+          .createQueryBuilder('orders')
+          .select(
+            'COUNT(*) FILTER (WHERE orders.created_at >= :since)',
+            'ordersCount30Days',
+          )
+          .addSelect(
+            `COALESCE(SUM(orders.total_cents) FILTER (WHERE orders.created_at >= :since AND orders.status IN (:...billableStatuses)), 0)`,
+            'salesCents30Days',
+          )
+          .addSelect('MAX(orders.created_at)', 'lastOrderAt')
+          .where('orders.restaurant_id = :id', {
+            id,
+            since,
+            billableStatuses: [
+              OrderStatus.ACCEPTED,
+              OrderStatus.PREPARING,
+              OrderStatus.READY,
+              OrderStatus.DELIVERED,
+            ],
+          })
+          .getRawOne<{
+            ordersCount30Days: string;
+            salesCents30Days: string;
+            lastOrderAt: Date | null;
+          }>(),
+      ]);
+
+    return {
+      restaurantId: id,
+      tablesCount,
+      menuItemsCount,
+      activeUsersCount,
+      ordersCount30Days: Number(orders?.ordersCount30Days ?? 0),
+      salesCents30Days: Number(orders?.salesCents30Days ?? 0),
+      lastOrderAt: orders?.lastOrderAt ?? null,
+    };
   }
 
   async update(

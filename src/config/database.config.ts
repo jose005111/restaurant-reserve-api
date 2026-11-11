@@ -7,9 +7,7 @@ export default registerAs('database', () => ({
   username: process.env.DB_USERNAME!,
   password: process.env.DB_PASSWORD!,
   database: process.env.DB_NAME,
-  // ssl: {
-  //   rejectUnauthorized: false,
-  // },
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
   synchronize: false,
   extra: {
     max: 10, // máximo de ligações no pool
