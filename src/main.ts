@@ -15,7 +15,7 @@ async function bootstrap() {
     corsOrigins: config.cors_origins.filter(Boolean),
   });
 
-  await app.listen(config.port);
+  await app.listen(config.port, '0.0.0.0');
   console.log(`API Listening on port ${config.port}`);
   console.log(`Swagger run on ${await app.getUrl()}/api/docs`);
 }
