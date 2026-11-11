@@ -1,48 +1,22 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import type { ConfigType } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { appConfig, storageConfig } from './config';
+import { setupApp } from './setup-app';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const config = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
+  const storage = app.get<ConfigType<typeof storageConfig>>(storageConfig.KEY);
 
-  // 1. CORS
-  app.enableCors({
-    origin: '*',
-    methods: ['POST', 'GET', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  setupApp(app, {
+    storageLocalPath: storage.localPath,
+    corsOrigins: config.cors_origins.filter(Boolean),
   });
 
-  // 2. Prefixo global da API
-
-  app.setGlobalPrefix('api');
-
-  // 3. Validação Global
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  // 4. Swagger
-  const config = new DocumentBuilder()
-    .setTitle('Saas Restaurant Reserve API')
-    .setDescription(
-      'Documentar a minha API para o meu SaaS de escola de condução',
-    )
-    .setVersion('1.0')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
-  // 5. Iniciar Servidor
-  const port = process.env.PORT || 3000;
-  await app.listen(port as any);
-
-  console.log(`API Listening on port ${port}`);
+  await app.listen(config.port);
+  console.log(`API Listening on port ${config.port}`);
   console.log(`Swagger run on ${await app.getUrl()}/api/docs`);
 }
-bootstrap();
+void bootstrap();
