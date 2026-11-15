@@ -22,8 +22,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import type { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
@@ -52,6 +54,27 @@ export class UsersController {
     @Query() query: ListUsersQueryDto,
   ): Promise<UserResponseDto[]> {
     return this.usersService.findAll(currentUser, query);
+  }
+
+  @Patch('me')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COUNTER)
+  @ApiOkResponse({ type: UserResponseDto })
+  updateProfile(
+    @CurrentUser() currentUser: AuthUser,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserResponseDto> {
+    return this.usersService.updateProfile(currentUser, dto);
+  }
+
+  @Patch('me/password')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COUNTER)
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async changePassword(
+    @CurrentUser() currentUser: AuthUser,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    await this.usersService.changePassword(currentUser, dto);
   }
 
   @Get(':id')

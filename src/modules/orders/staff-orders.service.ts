@@ -93,6 +93,7 @@ export class StaffOrdersService {
     dto: ChangeOrderStatusDto,
   ): Promise<StaffOrderResponseDto> {
     return this.change(user, id, dto.status, 'status', (order, now) => {
+      if (dto.status === OrderStatus.PREPARING) order.preparingAt = now;
       if (dto.status === OrderStatus.READY) order.readyAt = now;
       if (dto.status === OrderStatus.DELIVERED) order.deliveredAt = now;
       if (dto.status === OrderStatus.CANCELLED) order.cancelledAt = now;
@@ -158,6 +159,7 @@ export class StaffOrdersService {
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       acceptedAt: order.acceptedAt,
+      preparingAt: order.preparingAt,
       readyAt: order.readyAt,
       deliveredAt: order.deliveredAt,
       cancelledAt: order.cancelledAt,

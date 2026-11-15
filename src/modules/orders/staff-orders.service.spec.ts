@@ -139,7 +139,10 @@ describe('Staff orders', () => {
     await expect(
       service.accept(staff, first.id, { estimatedPrepMinutes: 20 }),
     ).rejects.toThrow(ConflictException);
-    await service.setStatus(staff, first.id, { status: OrderStatus.PREPARING });
+    const preparing = await service.setStatus(staff, first.id, {
+      status: OrderStatus.PREPARING,
+    });
+    expect(preparing.preparingAt).toBeInstanceOf(Date);
     const ready = await service.setStatus(staff, first.id, {
       status: OrderStatus.READY,
     });

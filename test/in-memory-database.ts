@@ -183,20 +183,32 @@ export class MemoryRepository<T extends Entity> {
   }
 
   createQueryBuilder() {
-    let email = '';
+    let email: string | undefined;
+    let id: string | undefined;
+    let excludedId: string | undefined;
     const query = {
       addSelect: () => query,
-      where: (sql: string, parameters: { email: string }) => {
-        void sql;
-        email = parameters.email;
+      where: (sql: string, parameters: { email?: string; id?: string }) => {
+        if (sql === 'user.id = :id') id = parameters.id;
+        else email = parameters.email;
         return query;
+      },
+      andWhere: (sql: string, parameters: { id: string }) => {
+        if (sql === 'user.id <> :id') {
+          excludedId = parameters.id;
+          return query;
+        }
+        throw new Error('Unsupported test query');
       },
       getOne: () =>
         Promise.resolve(
           this.rows.find(
             (row) =>
               row instanceof User &&
-              row.email.toLowerCase() === email.toLowerCase(),
+              (email === undefined ||
+                row.email.toLowerCase() === email.toLowerCase()) &&
+              (id === undefined || row.id === id) &&
+              row.id !== excludedId,
           ) ?? null,
         ),
     };

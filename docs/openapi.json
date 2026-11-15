@@ -2828,6 +2828,211 @@
         ]
       }
     },
+    "/api/users/me": {
+      "patch": {
+        "operationId": "UsersController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/me/password": {
+      "patch": {
+        "operationId": "UsersController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/users/{id}": {
       "get": {
         "operationId": "UsersController_findOne",
@@ -5768,6 +5973,103 @@
         ]
       }
     },
+    "/api/reports/dashboard": {
+      "get": {
+        "operationId": "ReportsController_dashboard",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Primeiro dia do período em Africa/Luanda. Por defeito, seis dias antes de to.",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Último dia do período em Africa/Luanda. Por defeito, hoje.",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "reports"
+        ]
+      }
+    },
     "/api/reports/summary": {
       "get": {
         "operationId": "ReportsController_summary",
@@ -6738,6 +7040,36 @@
           "updatedAt"
         ]
       },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1,
+            "writeOnly": true
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
       "UpdateUserDto": {
         "type": "object",
         "properties": {
@@ -7478,6 +7810,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "preparingAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "readyAt": {
             "type": "string",
             "format": "date-time",
@@ -7510,6 +7847,7 @@
           "rejectionReason",
           "createdAt",
           "acceptedAt",
+          "preparingAt",
           "readyAt",
           "deliveredAt",
           "cancelledAt"
@@ -7589,6 +7927,11 @@
             "format": "date-time",
             "nullable": true
           },
+          "preparingAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "readyAt": {
             "type": "string",
             "format": "date-time",
@@ -7622,6 +7965,7 @@
           "createdAt",
           "updatedAt",
           "acceptedAt",
+          "preparingAt",
           "readyAt",
           "deliveredAt",
           "cancelledAt"
@@ -7690,6 +8034,219 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "DashboardStatusCountDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACCEPTED",
+              "PREPARING",
+              "READY",
+              "DELIVERED",
+              "REJECTED",
+              "CANCELLED"
+            ]
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "count"
+        ]
+      },
+      "DashboardDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "ordersCount": {
+            "type": "integer"
+          },
+          "deliveredCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
+          "salesCents": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "ordersCount",
+          "deliveredCount",
+          "cancelledCount",
+          "salesCents"
+        ]
+      },
+      "DashboardHourDto": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "ordersCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "hour",
+          "ordersCount"
+        ]
+      },
+      "DashboardRecentOrderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "tableLabel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACCEPTED",
+              "PREPARING",
+              "READY",
+              "DELIVERED",
+              "REJECTED",
+              "CANCELLED"
+            ]
+          },
+          "guestsCount": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "tableLabel",
+          "status",
+          "guestsCount",
+          "totalCents",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DashboardResponseDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "ordersCount": {
+            "type": "integer"
+          },
+          "activeCount": {
+            "type": "integer"
+          },
+          "completedCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
+          "rejectedCount": {
+            "type": "integer"
+          },
+          "salesCents": {
+            "type": "integer"
+          },
+          "averageTicketCents": {
+            "type": "integer",
+            "nullable": true
+          },
+          "averageAcceptanceMinutes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "averagePreparationMinutes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "averageDeliveryMinutes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "statusCounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardStatusCountDto"
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardDayDto"
+            }
+          },
+          "hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardHourDto"
+            }
+          },
+          "recentOrders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardRecentOrderDto"
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "currency",
+          "ordersCount",
+          "activeCount",
+          "completedCount",
+          "cancelledCount",
+          "rejectedCount",
+          "salesCents",
+          "averageTicketCents",
+          "averageAcceptanceMinutes",
+          "averagePreparationMinutes",
+          "averageDeliveryMinutes",
+          "statusCounts",
+          "days",
+          "hours",
+          "recentOrders"
         ]
       },
       "DailySummaryDto": {

@@ -33,6 +33,8 @@ export class PublicOrderResponseDto {
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   acceptedAt: Date | null;
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  preparingAt: Date | null;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
   readyAt: Date | null;
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   deliveredAt: Date | null;

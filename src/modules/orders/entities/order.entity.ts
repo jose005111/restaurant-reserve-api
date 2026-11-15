@@ -70,6 +70,8 @@ export class Order {
   idempotencyKey: string;
   @Column({ name: 'accepted_at', type: 'timestamptz', nullable: true })
   acceptedAt: Date | null;
+  @Column({ name: 'preparing_at', type: 'timestamptz', nullable: true })
+  preparingAt: Date | null;
   @Column({ name: 'ready_at', type: 'timestamptz', nullable: true })
   readyAt: Date | null;
   @Column({ name: 'delivered_at', type: 'timestamptz', nullable: true })

@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import {
   DataSource,
   FindOptionsWhere,
@@ -17,8 +18,10 @@ import { UserRole } from '../../common/enums/user-role.enum';
 import { isUniqueViolation } from '../../common/utils/database-error.util';
 import { hashPassword } from '../../common/utils/password.util';
 import { Restaurant } from '../restaurants/entities/restaurant.entity';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
@@ -125,6 +128,47 @@ export class UsersService {
 
       throw error;
     }
+  }
+
+  async updateProfile(
+    currentUser: AuthUser,
+    dto: UpdateProfileDto,
+  ): Promise<UserResponseDto> {
+    return this.update(currentUser, currentUser.id, dto);
+  }
+
+  async changePassword(
+    currentUser: AuthUser,
+    dto: ChangePasswordDto,
+  ): Promise<void> {
+    const user = await this.users
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.id = :id', { id: currentUser.id })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('Utilizador não encontrado');
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash,
+    );
+
+    if (!passwordMatches) {
+      throw new BadRequestException('A palavra-passe atual está incorreta');
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException(
+        'A nova palavra-passe deve ser diferente da atual',
+      );
+    }
+
+    await this.users.update(user.id, {
+      passwordHash: await hashPassword(dto.newPassword),
+    });
   }
 
   async update(

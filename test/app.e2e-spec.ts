@@ -1,5 +1,6 @@
 import { OrdersModule } from '../src/modules/orders/orders.module';
 import { ReportsModule } from '../src/modules/reports/reports.module';
+import type { DashboardResponseDto } from '../src/modules/reports/dto/dashboard-response.dto';
 import type { SummaryResponseDto } from '../src/modules/reports/dto/summary-response.dto';
 import { Order } from '../src/modules/orders/entities/order.entity';
 import { OrderStatus } from '../src/common/enums/order-status.enum';
@@ -247,7 +248,7 @@ describe('Restaurant HTTP contracts (isolated repositories)', () => {
         restaurantId: first.id,
         role: UserRole.COUNTER,
         isActive: true,
-        passwordHash: '',
+        passwordHash: await bcrypt.hash('test-counter-password', 4),
       }),
     );
     superToken = app.get(JwtService).sign({ sub: superUser.id });
@@ -286,6 +287,97 @@ describe('Restaurant HTTP contracts (isolated repositories)', () => {
       role: UserRole.ADMIN,
     });
     expect(me.body).not.toHaveProperty('passwordHash');
+  });
+
+  it('lets every authenticated user update their own profile', async () => {
+    const updated = await request(app.getHttpServer())
+      .patch('/api/users/me')
+      .auth(counterToken, { type: 'bearer' })
+      .send({
+        name: 'Counter Updated',
+        email: 'counter-updated@example.com',
+      })
+      .expect(200);
+    expect(updated.body).toMatchObject({
+      id: expect.any(String) as string,
+      name: 'Counter Updated',
+      email: 'counter-updated@example.com',
+      role: UserRole.COUNTER,
+      restaurantId: first.id,
+    });
+    expect(updated.body).not.toHaveProperty('passwordHash');
+
+    const me = await request(app.getHttpServer())
+      .get('/api/auth/me')
+      .auth(counterToken, { type: 'bearer' })
+      .expect(200);
+    expect(me.body).toMatchObject({
+      name: 'Counter Updated',
+      email: 'counter-updated@example.com',
+    });
+
+    await request(app.getHttpServer())
+      .patch('/api/users/me')
+      .auth(token, { type: 'bearer' })
+      .send({ email: 'admin-b@example.com' })
+      .expect(409);
+    await request(app.getHttpServer())
+      .patch('/api/users/me')
+      .send({ name: 'Anonymous' })
+      .expect(401);
+    await request(app.getHttpServer())
+      .patch('/api/users/me')
+      .auth(counterToken, { type: 'bearer' })
+      .send({ role: UserRole.ADMIN })
+      .expect(400);
+  });
+
+  it('lets authenticated users change their own password', async () => {
+    const counter = database.users.rows.find(
+      (user) =>
+        user.role === UserRole.COUNTER && user.restaurantId === first.id,
+    )!;
+
+    await request(app.getHttpServer())
+      .patch('/api/users/me/password')
+      .auth(counterToken, { type: 'bearer' })
+      .send({
+        currentPassword: 'wrong-password',
+        newPassword: 'new-counter-password',
+      })
+      .expect(400);
+    await request(app.getHttpServer())
+      .patch('/api/users/me/password')
+      .auth(counterToken, { type: 'bearer' })
+      .send({
+        currentPassword: 'test-counter-password',
+        newPassword: 'test-counter-password',
+      })
+      .expect(400);
+    await request(app.getHttpServer())
+      .patch('/api/users/me/password')
+      .send({
+        currentPassword: 'test-counter-password',
+        newPassword: 'new-counter-password',
+      })
+      .expect(401);
+    await request(app.getHttpServer())
+      .patch('/api/users/me/password')
+      .auth(counterToken, { type: 'bearer' })
+      .send({
+        currentPassword: 'test-counter-password',
+        newPassword: 'new-counter-password',
+      })
+      .expect(204);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: counter.email, password: 'test-counter-password' })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: counter.email, password: 'new-counter-password' })
+      .expect(200);
   });
 
   it('creates restaurant and ADMIN through the SUPER_ADMIN endpoint with nullable defaults', async () => {
@@ -1341,6 +1433,162 @@ describe('Restaurant HTTP contracts (isolated repositories)', () => {
       .expect(403);
     await request(app.getHttpServer())
       .get('/api/reports/summary?from=2031-01-04&to=2031-01-03')
+      .auth(token, { type: 'bearer' })
+      .expect(400);
+  });
+
+  it('summarizes the operational flow for the authenticated staff tenant', async () => {
+    const day = (date: string, hour: number, minute: number): Date =>
+      new Date(
+        `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`,
+      );
+
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-01',
+        status: OrderStatus.DELIVERED,
+        number: 1,
+        guestsCount: 2,
+        totalCents: 3000,
+        createdAt: day('2032-03-01', 8, 10),
+        acceptedAt: day('2032-03-01', 8, 15),
+        readyAt: day('2032-03-01', 8, 35),
+        deliveredAt: day('2032-03-01', 8, 45),
+      }),
+    );
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-01',
+        status: OrderStatus.PREPARING,
+        number: 2,
+        guestsCount: 2,
+        totalCents: 2000,
+        createdAt: day('2032-03-01', 9, 5),
+        acceptedAt: day('2032-03-01', 9, 10),
+        preparingAt: day('2032-03-01', 9, 20),
+      }),
+    );
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-01',
+        status: OrderStatus.PENDING,
+        number: 3,
+        guestsCount: 1,
+        totalCents: 1000,
+        createdAt: day('2032-03-01', 10, 0),
+      }),
+    );
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-01',
+        status: OrderStatus.REJECTED,
+        number: 4,
+        guestsCount: 1,
+        totalCents: 500,
+        createdAt: day('2032-03-01', 11, 0),
+      }),
+    );
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-01',
+        status: OrderStatus.CANCELLED,
+        number: 5,
+        guestsCount: 2,
+        totalCents: 700,
+        createdAt: day('2032-03-01', 12, 0),
+        acceptedAt: day('2032-03-01', 12, 5),
+        cancelledAt: day('2032-03-01', 12, 10),
+      }),
+    );
+    await database.save(
+      database.create(Order, {
+        restaurantId: first.id,
+        orderDate: '2032-03-02',
+        status: OrderStatus.DELIVERED,
+        number: 1,
+        guestsCount: 4,
+        totalCents: 4000,
+        createdAt: day('2032-03-02', 10, 0),
+        acceptedAt: day('2032-03-02', 10, 5),
+        readyAt: day('2032-03-02', 10, 25),
+        deliveredAt: day('2032-03-02', 10, 40),
+      }),
+    );
+
+    const path = '/api/reports/dashboard?from=2032-03-01&to=2032-03-02';
+    const response = await request(app.getHttpServer())
+      .get(path)
+      .auth(token, { type: 'bearer' })
+      .expect(200);
+    const body = response.body as DashboardResponseDto;
+    expect(body).toMatchObject({
+      from: '2032-03-01',
+      to: '2032-03-02',
+      currency: 'AOA',
+      ordersCount: 6,
+      activeCount: 2,
+      completedCount: 2,
+      cancelledCount: 1,
+      rejectedCount: 1,
+      salesCents: 9000,
+      averageTicketCents: 3000,
+      averageAcceptanceMinutes: 5,
+      averagePreparationMinutes: 20,
+      averageDeliveryMinutes: 13,
+    });
+    expect(
+      Object.fromEntries(
+        body.statusCounts.map((status) => [status.status, status.count]),
+      ),
+    ).toMatchObject({
+      PENDING: 1,
+      PREPARING: 1,
+      DELIVERED: 2,
+      REJECTED: 1,
+      CANCELLED: 1,
+    });
+    expect(body.days).toMatchObject([
+      {
+        date: '2032-03-01',
+        ordersCount: 5,
+        deliveredCount: 1,
+        cancelledCount: 2,
+        salesCents: 5000,
+      },
+      {
+        date: '2032-03-02',
+        ordersCount: 1,
+        deliveredCount: 1,
+        cancelledCount: 0,
+        salesCents: 4000,
+      },
+    ]);
+    expect(body.hours[11]).toEqual({ hour: 11, ordersCount: 2 });
+    expect(body.recentOrders).toHaveLength(6);
+    expect(body.recentOrders[0]).toMatchObject({
+      number: 1,
+      status: OrderStatus.DELIVERED,
+      totalCents: 4000,
+    });
+
+    const counter = await request(app.getHttpServer())
+      .get(path)
+      .auth(counterToken, { type: 'bearer' })
+      .expect(200);
+    expect((counter.body as DashboardResponseDto).ordersCount).toBe(6);
+    const foreign = await request(app.getHttpServer())
+      .get(path)
+      .auth(otherToken, { type: 'bearer' })
+      .expect(200);
+    expect((foreign.body as DashboardResponseDto).ordersCount).toBe(0);
+    await request(app.getHttpServer()).get(path).expect(401);
+    await request(app.getHttpServer())
+      .get('/api/reports/dashboard?from=2032-03-03&to=2032-03-01')
       .auth(token, { type: 'bearer' })
       .expect(400);
   });
